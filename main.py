@@ -1,19 +1,116 @@
-# from fpdf import FPDF
-# import pandas as pd
-# import user_reqe_g as u
-# import user_model as um
-
-# def generate_pdf(dataframe):
-#     pdf = FPDF()
-#     pdf.add_page()
-#     pdf.set_font("Arial", size = 15)
-#     for i in range(len(dataframe)):
-#         pdf.cell(200, 10, txt = dataframe.values[i], ln = True, align = 'C')
-#     pdf.output("Report.pdf")
-from fpdf import FPDF
+from pyrebase import pyrebase
+import openai
+import json
 import pandas as pd
-import user_reqe_g as u
-import user_model as um
+import matplotlib.pyplot as plt
+from fpdf import FPDF
+
+config = {
+    "apiKey": "AIzaSyDoIEpwUbXYvTERotZ7ylh4AZF3aIk8CxA",
+    "authDomain": "http://smart-attendance-system-898a8.firebaseapp.com/",
+    "databaseURL": "https://smart-attendance-system-898a8-default-rtdb.firebaseio.com",
+    "storageBucket": "http://smart-attendance-system-898a8.appspot.com/"
+}
+
+firebase = pyrebase.initialize_app(config)
+
+openai.api_key = 'import os'
+
+class DataProcessor:
+    def __init__(self):
+        pass
+
+    def process_data(self, user_message):
+        data = self.get_data_from_firebase()
+        gpt_response = self.send_prompt_to_gpt(user_message)
+        processed_data = self.process_gpt_response(gpt_response, data)
+        return processed_data
+
+    def get_data_from_firebase(self):
+        firebase_db = firebase.database()
+        data = firebase_db.child("employee").child("LHuUG5ByvZksjjOtUfHF").get().val()
+        return data
+
+    def send_prompt_to_gpt(self, user_message):
+        prompt = f"User: {user_message}\nLLM:"
+        response = openai.Completion.create(
+            engine="text-davinci-003",  # You can also use "gpt-3.5-turbo" if available in your plan
+            prompt=prompt,
+            max_tokens=100
+        )
+        return response.choices[0].text.strip()
+
+    def process_gpt_response(self, gpt_response, data):
+        gpt_output = gpt_response
+        processed_data = {"gpt_output": gpt_output, "firebase_data": data}
+        return processed_data
+
+# Example usage
+user_message = "Generate a report for number of people present"
+processor = DataProcessor()
+processed_data = processor.process_data(user_message)
+
+# Save processed_data to a JSON file for download
+with open('processed_data.json', 'w') as json_file:
+    json.dump(processed_data, json_file)
+
+gpt_output = processed_data.get('gpt_output', '')
+firebase_data = processed_data.get('firebase_data', {})
+
+# Convert data to a DataFrame using pandas
+data_frame = pd.DataFrame.from_dict(firebase_data,
+                                    orient='index',
+                                    columns=['Values'])
+
+# Plotting
+plt.figure(figsize=(8, 6))
+plt.plot(data_frame.index,
+         data_frame['Values'],
+         marker='o',
+         color='b',
+         label='Values')
+plt.xlabel('X-Axis')
+plt.ylabel('Y-Axis')
+plt.title('Line Chart')
+plt.legend()
+plt.savefig('line_chart.png')
+plt.close()
+
+# Generate pie chart
+plt.figure(figsize=(8, 6))
+labels = list(data_frame.index)
+plt.pie(data_frame['Values'],
+        labels=labels,
+        autopct='%1.1f%%',
+        startangle=140)
+plt.title('Pie Chart')
+plt.savefig('pie_chart.png')
+plt.close()
+
+# Generate PDF
+class PDF(FPDF):
+    def header(self):
+        self.set_font('Helvetica', 'B', 12)
+        self.cell(0, 10, 'Generated Report', 0, 1, 'C')
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('Helvetica', 'I', 8)
+        self.cell(0, 10, 'Page %s' % self.page_no(), 0, 0, 'C')
+
+pdf = PDF()
+pdf.add_page()
+pdf.set_font('Helvetica', 'B', 16)
+pdf.cell(0, 10, 'GPT-3.5 Response:', 0, 1, 'L')
+pdf.set_font('Helvetica', '', 12)
+pdf.multi_cell(0, 10, gpt_output)
+pdf.output('report.pdf')
+
+print('Data has been processed and saved as line chart, pie chart, and PDF.')
+
+
+
+
 '''
 def generate_pdf(dataframe):
     pdf = FPDF()
@@ -231,113 +328,3 @@ with open('processed_data.json', 'w') as json_file:
   json.dump(processed_data, json_file)
 
   '''
-
-from pyrebase import pyrebase
-import openai
-import json
-import pandas as pd
-import matplotlib.pyplot as plt
-from fpdf import FPDF
-
-config = {
-    "apiKey": "AIzaSyDoIEpwUbXYvTERotZ7ylh4AZF3aIk8CxA",
-    "authDomain": "http://smart-attendance-system-898a8.firebaseapp.com/",
-    "databaseURL": "https://smart-attendance-system-898a8-default-rtdb.firebaseio.com",
-    "storageBucket": "http://smart-attendance-system-898a8.appspot.com/"
-}
-
-firebase = pyrebase.initialize_app(config)
-
-openai.api_key = 'import os'
-
-class DataProcessor:
-    def __init__(self):
-        pass
-
-    def process_data(self, user_message):
-        data = self.get_data_from_firebase()
-        gpt_response = self.send_prompt_to_gpt(user_message)
-        processed_data = self.process_gpt_response(gpt_response, data)
-        return processed_data
-
-    def get_data_from_firebase(self):
-        firebase_db = firebase.database()
-        data = firebase_db.child("employee").child("LHuUG5ByvZksjjOtUfHF").get().val()
-        return data
-
-    def send_prompt_to_gpt(self, user_message):
-        prompt = f"User: {user_message}\nLLM:"
-        response = openai.Completion.create(
-            engine="text-davinci-003",  # You can also use "gpt-3.5-turbo" if available in your plan
-            prompt=prompt,
-            max_tokens=100
-        )
-        return response.choices[0].text.strip()
-
-    def process_gpt_response(self, gpt_response, data):
-        gpt_output = gpt_response
-        processed_data = {"gpt_output": gpt_output, "firebase_data": data}
-        return processed_data
-
-# Example usage
-user_message = "Generate a report for number of people present"
-processor = DataProcessor()
-processed_data = processor.process_data(user_message)
-
-# Save processed_data to a JSON file for download
-with open('processed_data.json', 'w') as json_file:
-    json.dump(processed_data, json_file)
-
-gpt_output = processed_data.get('gpt_output', '')
-firebase_data = processed_data.get('firebase_data', {})
-
-# Convert data to a DataFrame using pandas
-data_frame = pd.DataFrame.from_dict(firebase_data,
-                                    orient='index',
-                                    columns=['Values'])
-
-# Plotting
-plt.figure(figsize=(8, 6))
-plt.plot(data_frame.index,
-         data_frame['Values'],
-         marker='o',
-         color='b',
-         label='Values')
-plt.xlabel('X-Axis')
-plt.ylabel('Y-Axis')
-plt.title('Line Chart')
-plt.legend()
-plt.savefig('line_chart.png')
-plt.close()
-
-# Generate pie chart
-plt.figure(figsize=(8, 6))
-labels = list(data_frame.index)
-plt.pie(data_frame['Values'],
-        labels=labels,
-        autopct='%1.1f%%',
-        startangle=140)
-plt.title('Pie Chart')
-plt.savefig('pie_chart.png')
-plt.close()
-
-# Generate PDF
-class PDF(FPDF):
-    def header(self):
-        self.set_font('Helvetica', 'B', 12)
-        self.cell(0, 10, 'Generated Report', 0, 1, 'C')
-
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('Helvetica', 'I', 8)
-        self.cell(0, 10, 'Page %s' % self.page_no(), 0, 0, 'C')
-
-pdf = PDF()
-pdf.add_page()
-pdf.set_font('Helvetica', 'B', 16)
-pdf.cell(0, 10, 'GPT-3.5 Response:', 0, 1, 'L')
-pdf.set_font('Helvetica', '', 12)
-pdf.multi_cell(0, 10, gpt_output)
-pdf.output('report.pdf')
-
-print('Data has been processed and saved as line chart, pie chart, and PDF.')
