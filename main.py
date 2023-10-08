@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 import face_recognition
 import cvzone
-
+from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
@@ -15,8 +15,6 @@ firebase_admin.initialize_app(cred,{
     'databaseURL': "https://faceattendance-ca61b-default-rtdb.firebaseio.com/",
     'storageBucket': "faceattendance-ca61b.appspot.com",
 })
-
-
 
 # Open the camera (usually 0 or 1 for built-in webcams)
 cap = cv2.VideoCapture(0)
@@ -78,22 +76,48 @@ while not break_loop:
             if counter == 0:
                 counter = 1
                 modetype = 1
-                break_loop = True  # Break the loop on successful recognition
+                #break_loop = True  # Break the loop on successful recognition
 
     if counter != 0:
         if counter == 1:
             studentInfo = db.reference(f'Students/{id}')
             current_attendance = studentInfo.child("total_attendance").get()
+            last_attendance_time_str = studentInfo.child("last_attendance_time").get()
+            
+            # Convert the last attendance time string to datetime
+            datetimeObject = datetime.strptime(last_attendance_time_str, '%d-%m-%Y %H:%M:%S')
+            
+            # Calculate the time elapsed in seconds
+            secondsElapsed = (datetime.now() - datetimeObject).total_seconds()
+            
             print(studentInfo)
-            # Increment the attendance count
-            new_attendance = current_attendance + 1
+            print("Time elapsed since last attendance:", secondsElapsed, "seconds")
+            
+            # Check if the timeout (30 seconds) has passed
+            if secondsElapsed >= 30:
+                # Increment the attendance count
+                new_attendance = current_attendance + 1
 
-            # Update the "total_attendance" field in the database
-            studentInfo.update({"total_attendance": new_attendance})
-            print(f"Updated attendance for student {id} to {new_attendance}")
+                # Update the "total_attendance" field in the database
+                studentInfo.update({"total_attendance": new_attendance})
+                print(f"Updated attendance for student {id} to {new_attendance}")
+                
+                # Update the last attendance time to the current time
+                new_time = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+                studentInfo.update({"last_attendance_time": new_time})
+            else:
+                counter = 0
+
+        counter += 1
+    
+        if counter >= 20:
+            counter = 0
+            studentInfo = []
+            imgStudent = []
 
     cv2.imshow("Face Attendance", imgBackground)
-    cv2.waitKey(1)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
 # Release the camera and close all OpenCV windows
 cap.release()
