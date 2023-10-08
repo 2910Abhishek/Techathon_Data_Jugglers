@@ -16,6 +16,8 @@ firebase_admin.initialize_app(cred,{
     'storageBucket': "faceattendance-ca61b.appspot.com",
 })
 
+
+
 # Open the camera (usually 0 or 1 for built-in webcams)
 cap = cv2.VideoCapture(0)
 
