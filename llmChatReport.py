@@ -1,3 +1,5 @@
+# IMPRTANT NOTE :To explore and experiment with the API, all new users get free $5 worth of free tokens. These tokens expire after 3 months-OpenAi(https://help.openai.com/en/articles/4936830-what-happens-after-i-use-my-free-tokens-or-the-3-months-is-up-in-the-free-trial).
+
 from pyrebase import pyrebase
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -22,8 +24,8 @@ db = firebase.database()
 # cred = credentials.Certificate('credentials.json')
 # firebase_admin.initialize_app(cred)
 # db = firestore.client()
-
 # Initialize OpenAI API
+
 openai.api_key = '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'
 
 class DataProcessor:
