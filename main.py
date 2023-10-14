@@ -97,13 +97,15 @@ while not break_loop:
             if secondsElapsed >= 30:
                 # Increment the attendance count
                 new_attendance = current_attendance + 1
-
+                
                 # Update the "total_attendance" field in the database
                 studentInfo.update({"total_attendance": new_attendance})
+                
                 print(f"Updated attendance for student {id} to {new_attendance}")
                 
                 # Update the last attendance time to the current time
                 new_time = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+                
                 studentInfo.update({"last_attendance_time": new_time})
             else:
                 counter = 0

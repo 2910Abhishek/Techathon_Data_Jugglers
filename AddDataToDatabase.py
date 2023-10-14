@@ -8,7 +8,7 @@ firebase_admin.initialize_app(cred,{
 })
 
 ref = db.reference('Students')
-
+print(ref.get())
 data = {
     "1046":
         {
@@ -16,7 +16,6 @@ data = {
             "major": "AI/ML",
             "starting_year": 2022,
             "total_attendance": 10,
-            "standing": "G",
             "year": 4,
             "last_attendance_time": "07-10-2023 18:23:46",
         },
@@ -26,7 +25,6 @@ data = {
             "major": "AI/ML",
             "starting_year": 2022,
             "total_attendance": 20,
-            "standing": "G",
             "year": 5,
             "last_attendance_time": "07-10-2023 18:23:46",
         },
@@ -36,7 +34,7 @@ data = {
             "major": "Full Stack",
             "starting_year": 2022,
             "total_attendance": 0,
-            "standing": "G",
+            
             "year": 8,
             "last_attendance_time":"07-10-2023 18:23:46",
         },
@@ -46,7 +44,6 @@ data = {
             "major": "Full Stack",
             "starting_year": 2022,
             "total_attendance": 0,
-            "standing": "G",
             "year": 8,
             "last_attendance_time":"07-10-2023 18:23:46",
         },
@@ -56,12 +53,11 @@ data = {
             "major": "Full Stack",
             "starting_year": 2022,
             "total_attendance": 5,
-            "standing": "G",
+            
             "year": 8,
             "last_attendance_time":"07-10-2023 18:23:46",
         },
 
 }
-
 for key, value in data.items():
     ref.child(key).set(value)
