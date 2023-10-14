@@ -3,8 +3,15 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
-import { ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
 import { storage } from "../firebase";
+import { getDatabase, ref as ref1, set } from "firebase/database";
+import { database } from "../firebase";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -16,10 +23,20 @@ const Register = () => {
   const [progresspercent, setProgresspercent] = useState(0);
   const navigate = useNavigate();
 
+  const writeUserData = async (randomID, email, name, password, attendance_count, downloadURL) => {
+    const db = getDatabase();
+    await set(ref(db, "/employee"), {
+      id: randomID,
+      email,
+      name,
+      password,
+      attendance_count,
+      image: downloadURL,
+      created: Timestamp.now(),
+    });
+  };
+
   // const hashPassword = async () => {};
-
-  console.log(hashedPassword);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -35,31 +52,44 @@ const Register = () => {
       console.log("File selected:", file.name);
     }
 
-    const storageRef = ref(storage, `files/${file.name}`);
+    const storage = getStorage();
+    const storageRef = ref(storage, file.name);
+
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     uploadTask.on(
       "state_changed",
       (snapshot) => {
-        const progress = Math.round(
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-        );
-        setProgresspercent(progress);
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log("Upload is " + progress + "% done");
+        switch (snapshot.state) {
+          case "paused":
+            console.log("Upload is paused");
+            break;
+          case "running":
+            console.log("Upload is running");
+            break;
+        }
       },
       (error) => {
         alert(error);
       },
       async () => {
         try {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          const attendance_count = 0;
-          await addDoc(collection(db, "employee"), {
-            email,
-            name,
-            password,
-            attendance_count,
-            image: downloadURL,
-            created: Timestamp.now(),
+          getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
+            console.log(downloadURL);
+            function generateRandom6DigitNumber() {
+              const min = 100000;
+              const max = 999999;
+              return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            const attendance_count = 0;
+            const randomID = generateRandom6DigitNumber();
+            console.log(randomID);
+
+            await writeUserData(randomID, email, name, password, attendance_count, downloadURL);
           });
         } catch (error) {
           alert(error);
@@ -69,7 +99,7 @@ const Register = () => {
           setPassword("");
           setImage("");
           setLoading(0);
-          navigate('/login', { replace: true })
+          navigate("/login", { replace: true });
         }
       }
     );
