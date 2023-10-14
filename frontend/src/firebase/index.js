@@ -4,13 +4,14 @@ import { getStorage } from "firebase/storage";
 import { getDatabase  } from "firebase/database";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDoIEpwUbXYvTERotZ7ylh4AZF3aIk8CxA",
-  authDomain: "smart-attendance-system-898a8.firebaseapp.com",
-  projectId: "smart-attendance-system-898a8",
-  storageBucket: "smart-attendance-system-898a8.appspot.com",
-  messagingSenderId: "478041504329",
-  appId: "1:478041504329:web:1dafaf4429fc76cbfbdd98",
-  measurementId: "G-W23EXFRVRP"
+  apiKey: "AIzaSyDOs77khSZxUiBM-QQJZZ56ezvGY5ioib0",
+  authDomain: "faceattendance-ca61b.firebaseapp.com",
+  databaseURL: "https://faceattendance-ca61b-default-rtdb.firebaseio.com/",
+  projectId: "faceattendance-ca61b",
+  storageBucket: "faceattendance-ca61b.appspot.com",
+  messagingSenderId: "1023165376594",
+  appId: "1:1023165376594:web:2c296c6521d57c92f2978b",
+  measurementId: "G-JMCXF84DDL"
 };
 
 const app = initializeApp(firebaseConfig);
